@@ -1,0 +1,26 @@
+HKCR
+{
+	ComServer.DataMgr.1 = s 'DataMgr Class'
+	{
+		CLSID = s '{BCCB259A-648C-46D8-80EC-F354DFE7B55B}'
+	}
+	ComServer.DataMgr = s 'DataMgr Class'
+	{
+		CLSID = s '{BCCB259A-648C-46D8-80EC-F354DFE7B55B}'
+		CurVer = s 'ComServer.DataMgr.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {BCCB259A-648C-46D8-80EC-F354DFE7B55B} = s 'DataMgr Class'
+		{
+			ProgID = s 'ComServer.DataMgr.1'
+			VersionIndependentProgID = s 'ComServer.DataMgr'
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+			'TypeLib' = s '{25C35E63-4ED5-485D-892C-83236F7F6039}'
+		}
+	}
+}
