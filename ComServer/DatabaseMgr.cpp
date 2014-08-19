@@ -315,6 +315,16 @@ void CDatabaseMgr::QueryStorageTable(CSimpleArray<storage> *pArray)
 	m_ecStorage.CloseAll();
 }
 
+void CDatabaseMgr::QueryEventActionTable(CSimpleArray<ec_Event_Action> *pArray)
+{
+
+}
+
+void CDatabaseMgr::QueryEventLogTable(CSimpleArray<ec_Event_Log> *pArray)
+{
+
+}
+
 void CDatabaseMgr::QueryECparmsTable(CSimpleArray<parameter> *pArray)
 {
 	parameter tblData;
@@ -450,6 +460,11 @@ void CDatabaseMgr::InsertGroupCamTable(CSimpleArray<group_camera> *pArray)
 	m_ecGroup_Camera.ModifyDatabase(strSql);
 	m_ecGroup_Camera.CloseAll();	
 	m_GroupCamArray.RemoveAll();
+}
+
+void CDatabaseMgr::InsertEventActionTable(CSimpleArray<ec_Event_Action> *pArray)
+{
+
 }
 
 void CDatabaseMgr::InsertStreamTable(CSimpleArray<video_stream> *pArray)
@@ -643,6 +658,12 @@ void CDatabaseMgr::DeleteCameraTable(CSimpleArray <camera> *pArray, BYTE bOperat
 		m_CameraArray.RemoveAll();
 	}
 }
+
+void CDatabaseMgr::DeleteEventActionTable(CSimpleArray<ec_Event_Action> *pArray)
+{
+
+}
+
 void CDatabaseMgr::DeleteStreamTable(CSimpleArray <video_stream> *pArray, BYTE bOperation)
 {
 	bool bExecute = false;
@@ -854,6 +875,11 @@ void CDatabaseMgr::UpdateCameraTable(CSimpleArray <camera> *pArray, BYTE bOperat
 		m_ecCamera.CloseAll();
 		m_CameraArray.RemoveAll();
 	}
+}
+
+void CDatabaseMgr::UpdateEventActionTable(CSimpleArray<ec_Event_Action> *pArray)
+{
+
 }
 
 void CDatabaseMgr::UpdateStreamTable(CSimpleArray <video_stream> *pArray,BYTE bOperation)

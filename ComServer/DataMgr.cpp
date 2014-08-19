@@ -25,19 +25,19 @@ STDMETHODIMP CDataMgr::QueryFromDC(BYTE bDataType, BYTE bOperation, VARIANT* Var
 
 void CDataMgr::DatabaseOperation(BYTE bOperation, VARIANT* VarData)
 {
-	if (bOperation >= GET_GROUP && bOperation <= GET_PARAM)
+	if (bOperation >= GET_GROUP && bOperation <= GET_EVENT_ACTION)
 	{
 		QueryDatabase(bOperation, VarData);
 	}
-	else if(bOperation >= INSERT_GROUP && bOperation <= INSERT_STREAM)
+	else if(bOperation >= INSERT_GROUP && bOperation <= INSERT_EVENT_ACTION)
 	{
 		InsertDatabase(bOperation, VarData);
 	}
-	else if(bOperation >= DELETE_GROUP_BY_DEVICE && bOperation <= DELETE_RECORD_TIME_BY_ID)
+	else if(bOperation >= DELETE_GROUP_BY_DEVICE && bOperation <= DELETE_EVENT_ACTION)
 	{
 		DeleteDatabase(bOperation, VarData);
 	}
-	else if(bOperation >= UPDATE_GROUP_BY_ID && bOperation <= UPDATE_STREAM)
+	else if(bOperation >= UPDATE_GROUP_BY_ID && bOperation <= UPDATE_EVENT_ACTION)
 	{
 		UpdateDatabase(bOperation, VarData);
 	}
@@ -80,6 +80,16 @@ void CDataMgr::QueryDatabase(BYTE bOperation, VARIANT* VarData)
 		CSimpleArray<parameter> *pArray = (CSimpleArray<parameter>*)VarData;
 		m_databaseMgr.QueryECparmsTable(pArray);
 	}
+	else if (bOperation >= GET_EVENT_LOG && bOperation <= GET_EVENT_LOG)
+	{
+		CSimpleArray<ec_Event_Log> *pArray = (CSimpleArray<ec_Event_Log>*)VarData;
+		m_databaseMgr.QueryEventLogTable(pArray);
+	}
+	else if (bOperation >= GET_EVENT_ACTION && bOperation <= GET_EVENT_ACTION)
+	{
+		CSimpleArray<ec_Event_Action> *pArray = (CSimpleArray<ec_Event_Action>*)VarData;
+		m_databaseMgr.QueryEventActionTable(pArray);
+	}
 }
 void CDataMgr::InsertDatabase(BYTE bOperation, VARIANT* VarData)
 {
@@ -107,6 +117,11 @@ void CDataMgr::InsertDatabase(BYTE bOperation, VARIANT* VarData)
 	{
 		CSimpleArray <video_stream> *pArray = (CSimpleArray <video_stream>*)VarData;
 		m_databaseMgr.InsertStreamTable(pArray);
+	}
+	else if (bOperation == INSERT_EVENT_ACTION)
+	{
+		CSimpleArray <ec_Event_Action> *pArray = (CSimpleArray <ec_Event_Action>*)VarData;
+		m_databaseMgr.InsertEventActionTable(pArray);
 	}
 }
 void CDataMgr::DeleteDatabase(BYTE bOperation, VARIANT* VarData)
@@ -136,6 +151,11 @@ void CDataMgr::DeleteDatabase(BYTE bOperation, VARIANT* VarData)
 		CSimpleArray<video_record> *pArray = (CSimpleArray<video_record>*)VarData;
 		m_databaseMgr.DeleteCameraRecordTable(pArray, bOperation);
 	}
+	else if (bOperation >= DELETE_EVENT_ACTION && bOperation <= DELETE_EVENT_ACTION)
+	{
+		CSimpleArray<ec_Event_Action> *pArray = (CSimpleArray<ec_Event_Action>*)VarData;
+		m_databaseMgr.DeleteEventActionTable(pArray);
+	}
 }
 
 void CDataMgr::UpdateDatabase(BYTE bOperation, VARIANT* VarData)
@@ -159,5 +179,10 @@ void CDataMgr::UpdateDatabase(BYTE bOperation, VARIANT* VarData)
 	{
 		CSimpleArray<video_stream> *pArray = (CSimpleArray<video_stream>*)VarData;
 		m_databaseMgr.UpdateStreamTable(pArray,bOperation);
+	}
+	else if (bOperation >= UPDATE_EVENT_ACTION && bOperation <= UPDATE_EVENT_ACTION)
+	{
+		CSimpleArray<ec_Event_Action> *pArray = (CSimpleArray<ec_Event_Action>*)VarData;
+		m_databaseMgr.UpdateEventActionTable(pArray);
 	}
 }
