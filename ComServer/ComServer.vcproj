@@ -54,6 +54,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="N:\Include"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL;_MERGE_PROXYSTUB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -318,10 +319,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\GlobalDef.h"
-				>
-			</File>
-			<File
 				RelativePath=".\Resource.h"
 				>
 			</File>
@@ -404,6 +401,14 @@
 			</File>
 			<File
 				RelativePath=".\ec_camera_recording_time.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ec_event_action.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ec_event_log.h"
 				>
 			</File>
 			<File

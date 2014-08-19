@@ -9,8 +9,8 @@
 			Name="Debug|Win32"
 			>
 			<DebugSettings
-				Command="D:\EtroCenter\1.2.5.0\Etrocenter\Bin\NVR.exe"
-				WorkingDirectory=""
+				Command="D:\Lynn-Test\ComObject\LynnDlg\Debug\LynnDlg.exe"
+				WorkingDirectory="D:\Lynn-Test\ComObject\LynnDlg\Debug"
 				CommandArguments=""
 				Attach="false"
 				DebuggerType="3"

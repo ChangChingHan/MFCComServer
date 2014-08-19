@@ -4,7 +4,7 @@
 
 
  /* File created by MIDL compiler version 7.00.0500 */
-/* at Thu Jun 26 14:48:36 2014
+/* at Mon Aug 18 11:49:55 2014
  */
 /* Compiler settings for .\ComServer.idl:
     Oicf, W1, Zp8, env=Win32 (32b run)

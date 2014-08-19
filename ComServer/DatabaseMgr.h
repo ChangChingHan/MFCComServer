@@ -8,6 +8,8 @@
 #include "ec_storage.h"
 #include "ecparms.h"
 #include "ec_camera_recording_time.h"
+#include "ec_event_log.h"
+#include "ec_event_action.h"
 
 class CDatabaseMgr
 {
@@ -59,4 +61,6 @@ private:
 	Cec_storage					m_ecStorage;
 	Cecparms					m_ecParam;
 	Cec_camera_recording_time	m_ecRecordingTime;
+	Cec_event_log				m_ecEventLog;
+	Cec_event_action			m_ecEventAction;
 };
