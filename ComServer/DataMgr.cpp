@@ -82,7 +82,7 @@ void CDataMgr::QueryDatabase(BYTE bOperation, VARIANT* VarData)
 	}
 	else if (bOperation >= GET_EVENT_LOG && bOperation <= GET_EVENT_LOG)
 	{
-		CSimpleArray<ec_Event_Log> *pArray = (CSimpleArray<ec_Event_Log>*)VarData;
+		CSimpleArray<eventlog> *pArray = (CSimpleArray<eventlog>*)VarData;
 		m_databaseMgr.QueryEventLogTable(pArray);
 	}
 	else if (bOperation >= GET_EVENT_ACTION && bOperation <= GET_EVENT_ACTION)

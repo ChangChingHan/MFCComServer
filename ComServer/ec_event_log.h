@@ -166,6 +166,7 @@ public:
 		hr = Open( m_session, strSQL);
 		if (FAILED(hr))
 			return hr;
+		return hr;
 	}
 	HRESULT OpenAll()
 	{

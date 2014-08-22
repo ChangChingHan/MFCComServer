@@ -320,9 +320,72 @@ void CDatabaseMgr::QueryEventActionTable(CSimpleArray<ec_Event_Action> *pArray)
 
 }
 
-void CDatabaseMgr::QueryEventLogTable(CSimpleArray<ec_Event_Log> *pArray)
+void CDatabaseMgr::QueryEventLogTable(CSimpleArray<eventlog> *pArray)
 {
+	HRESULT hr;
+	eventlog tblData;
+	if(pArray && pArray->GetSize())
+		tblData = (*pArray)[0];
 
+	if (pArray->GetSize())
+	{
+		CString str;
+		if (tblData.logcount)
+		{
+			str.Format(_T("SELECT TOP %d *FROM ec_event_log"), tblData.logcount);
+		}
+		else
+		{
+			BOOL bAddSubStr = false;
+			CString strTemp;
+			str = (_T("SELECT *FROM ec_event_log where "));
+			if (tblData.event_type != NULL_EVENT_TYPE)
+			{
+				strTemp.Format(_T("event_type_code = %d "),tblData.event_type);
+				str += strTemp;
+				bAddSubStr = TRUE;
+			}
+
+			if(tblData.device_mac.length())
+			{
+				strTemp.Format(_T("mac_address = '%s' "),tblData.device_mac.c_str());
+				if (bAddSubStr)
+				{
+					str += _T("and ");
+				}
+				str += strTemp;
+				bAddSubStr = TRUE;
+			}
+
+			if(tblData.start_time.year != 0)
+			{
+				CString strStartTime = DateTimeFormat(tblData.start_time);
+				CString strEndTime = DateTimeFormat(tblData.end_time);
+				strTemp.Format(_T("occur_time >= '%s' and end_time <= '%s'"),strStartTime,strEndTime);
+
+				if (bAddSubStr)
+				{
+					str += _T("and ");
+				}
+				str += strTemp;
+			}
+		}
+		
+		hr = m_ecEventLog.Query(str);
+		pArray->RemoveAll();
+	}
+
+	while(hr == S_OK && m_ecEventLog.MoveNext() == S_OK)
+	{
+		tblData.logid			= m_ecEventLog.m_event_key;
+		tblData.event_type		= (EVENTTYPE)_wtoi(m_ecEventLog.m_event_type_code);
+		tblData.start_time		= m_ecEventLog.m_occur_time;
+		tblData.end_time		= m_ecEventLog.m_end_time;
+		tblData.device_mac		= m_ecEventLog.m_mac_address;
+		
+		pArray->Add(tblData);
+	}
+	m_ecEventLog.CloseAll();
 }
 
 void CDatabaseMgr::QueryECparmsTable(CSimpleArray<parameter> *pArray)
@@ -900,4 +963,18 @@ void CDatabaseMgr::UpdateStreamTable(CSimpleArray <video_stream> *pArray,BYTE bO
 	{
 
 	}
+}
+
+CString CDatabaseMgr::DateTimeFormat(const DBTIMESTAMP& dbTime)
+{
+	CString str;
+	str.Format(_T("%d%02d%02d %d:%d:%d"),
+		dbTime.year,
+		dbTime.month,
+		dbTime.day,
+		dbTime.hour,
+		dbTime.minute,
+		dbTime.second);
+
+	return str;
 }

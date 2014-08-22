@@ -17,6 +17,8 @@ public:
 	CDatabaseMgr(void);
 	~CDatabaseMgr(void);
 
+private:
+	CString DateTimeFormat(const DBTIMESTAMP& dbTime);
 public:
 	void QueryGroupTable(CSimpleArray <group> *pArray, BYTE bOperation, BOOL bUpdate = FALSE);
 	void QueryGroupCamTable(CSimpleArray <group_camera> *pArray, BYTE bOperation, BOOL bUpdate = FALSE);
@@ -25,7 +27,7 @@ public:
 	void QueryCameraRecordTable(CSimpleArray<video_record> *pArray);
 	void QueryStorageTable(CSimpleArray<storage> *pArray);
 	void QueryECparmsTable(CSimpleArray<parameter> *pArray);
-	void QueryEventLogTable(CSimpleArray<ec_Event_Log> *pArray);
+	void QueryEventLogTable(CSimpleArray<eventlog> *pArray);
 	void QueryEventActionTable(CSimpleArray<ec_Event_Action> *pArray);
 
 	void InsertGroupTable(CSimpleArray <group> *pArray);
