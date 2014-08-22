@@ -87,7 +87,7 @@ void CDataMgr::QueryDatabase(BYTE bOperation, VARIANT* VarData)
 	}
 	else if (bOperation >= GET_EVENT_ACTION && bOperation <= GET_EVENT_ACTION)
 	{
-		CSimpleArray<ec_Event_Action> *pArray = (CSimpleArray<ec_Event_Action>*)VarData;
+		CSimpleArray<eventaction> *pArray = (CSimpleArray<eventaction>*)VarData;
 		m_databaseMgr.QueryEventActionTable(pArray);
 	}
 }
@@ -120,7 +120,7 @@ void CDataMgr::InsertDatabase(BYTE bOperation, VARIANT* VarData)
 	}
 	else if (bOperation == INSERT_EVENT_ACTION)
 	{
-		CSimpleArray <ec_Event_Action> *pArray = (CSimpleArray <ec_Event_Action>*)VarData;
+		CSimpleArray <eventaction> *pArray = (CSimpleArray <eventaction>*)VarData;
 		m_databaseMgr.InsertEventActionTable(pArray);
 	}
 }
@@ -153,7 +153,7 @@ void CDataMgr::DeleteDatabase(BYTE bOperation, VARIANT* VarData)
 	}
 	else if (bOperation >= DELETE_EVENT_ACTION && bOperation <= DELETE_EVENT_ACTION)
 	{
-		CSimpleArray<ec_Event_Action> *pArray = (CSimpleArray<ec_Event_Action>*)VarData;
+		CSimpleArray<eventaction> *pArray = (CSimpleArray<eventaction>*)VarData;
 		m_databaseMgr.DeleteEventActionTable(pArray);
 	}
 }
@@ -182,7 +182,7 @@ void CDataMgr::UpdateDatabase(BYTE bOperation, VARIANT* VarData)
 	}
 	else if (bOperation >= UPDATE_EVENT_ACTION && bOperation <= UPDATE_EVENT_ACTION)
 	{
-		CSimpleArray<ec_Event_Action> *pArray = (CSimpleArray<ec_Event_Action>*)VarData;
+		CSimpleArray<eventaction> *pArray = (CSimpleArray<eventaction>*)VarData;
 		m_databaseMgr.UpdateEventActionTable(pArray);
 	}
 }

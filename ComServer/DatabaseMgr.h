@@ -28,27 +28,27 @@ public:
 	void QueryStorageTable(CSimpleArray<storage> *pArray);
 	void QueryECparmsTable(CSimpleArray<parameter> *pArray);
 	void QueryEventLogTable(CSimpleArray<eventlog> *pArray);
-	void QueryEventActionTable(CSimpleArray<ec_Event_Action> *pArray);
+	void QueryEventActionTable(CSimpleArray<eventaction> *pArray);
 
 	void InsertGroupTable(CSimpleArray <group> *pArray);
 	void InsertCameraTable(CSimpleArray<camera> *pArray);
 	void InsertCameraRecordTable(CSimpleArray<video_record> *pArray);
 	void InsertGroupCamTable(CSimpleArray<group_camera> *pArray);
 	void InsertStreamTable(CSimpleArray<video_stream> *pArray);
-	void InsertEventActionTable(CSimpleArray<ec_Event_Action> *pArray);
+	void InsertEventActionTable(CSimpleArray<eventaction> *pArray);
 
 	void DeleteGroupTable(CSimpleArray <group> *pArray, BYTE bOperation);
 	void DeleteGroupCamTable(CSimpleArray <group_camera> *pArray, BYTE bOperation);
 	void DeleteCameraRecordTable(CSimpleArray <video_record> *pArray, BYTE bOperation);
 	void DeleteCameraTable(CSimpleArray <camera> *pArray, BYTE bOperation);
 	void DeleteStreamTable(CSimpleArray <video_stream> *pArray, BYTE bOperation);
-	void DeleteEventActionTable(CSimpleArray<ec_Event_Action> *pArray);
+	void DeleteEventActionTable(CSimpleArray<eventaction> *pArray);
 
 	void UpdateGroupTable(CSimpleArray <group> *pArray,BYTE bOperation);
 	void UpdateGroupCamTable(CSimpleArray <group_camera> *pArray,BYTE bOperation);
 	void UpdateCameraTable(CSimpleArray <camera> *pArray, BYTE bOperation);
 	void UpdateStreamTable(CSimpleArray <video_stream> *pArray,BYTE bOperation);
-	void UpdateEventActionTable(CSimpleArray<ec_Event_Action> *pArray);
+	void UpdateEventActionTable(CSimpleArray<eventaction> *pArray);
 
 private:
 	CSimpleArray<camera> m_CameraArray;

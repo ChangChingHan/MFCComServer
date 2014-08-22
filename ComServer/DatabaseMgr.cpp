@@ -315,9 +315,23 @@ void CDatabaseMgr::QueryStorageTable(CSimpleArray<storage> *pArray)
 	m_ecStorage.CloseAll();
 }
 
-void CDatabaseMgr::QueryEventActionTable(CSimpleArray<ec_Event_Action> *pArray)
+void CDatabaseMgr::QueryEventActionTable(CSimpleArray<eventaction> *pArray)
 {
+	HRESULT hr;
+	eventaction tblData;
+	hr = m_ecEventAction.OpenAll();
 
+	while(hr == S_OK && m_ecEventAction.MoveNext() == S_OK)
+	{
+		tblData.actionid		= m_ecEventAction.m_actionid;
+		tblData.event_type		= (EVENTTYPE)m_ecEventAction.m_event_type;
+		tblData.action_type		= (EVENT_ACTION)m_ecEventAction.m_action_type;
+		tblData.source_mac		= m_ecEventAction.m_camera_ip;
+		tblData.target_mac		= m_ecEventAction.m_mail_target;
+
+		pArray->Add(tblData);
+	}
+	m_ecEventAction.CloseAll();	
 }
 
 void CDatabaseMgr::QueryEventLogTable(CSimpleArray<eventlog> *pArray)
@@ -525,9 +539,29 @@ void CDatabaseMgr::InsertGroupCamTable(CSimpleArray<group_camera> *pArray)
 	m_GroupCamArray.RemoveAll();
 }
 
-void CDatabaseMgr::InsertEventActionTable(CSimpleArray<ec_Event_Action> *pArray)
+void CDatabaseMgr::InsertEventActionTable(CSimpleArray<eventaction> *pArray)
 {
+	HRESULT hr;
+	eventaction tblData;
 
+	int nIdx = 0, nCount = pArray->GetSize();
+	CString str, strSql;
+	for (nIdx = 0; nIdx < nCount; nIdx++)
+	{
+		str.Empty();
+		str.Format( 
+			_T(
+			"INSERT INTO ec_event_action(camera_ip,event_type,action_type,mail_target) values ('%s',%d,%d,'%s')"),
+			(*pArray)[nIdx].source_mac.c_str(),
+			(*pArray)[nIdx].event_type,
+			(*pArray)[nIdx].action_type,
+			(*pArray)[nIdx].target_mac.c_str()
+			);
+
+		strSql += str;
+	}
+	hr = m_ecEventAction.ModifyDatabase(strSql);
+	m_ecEventAction.CloseAll();
 }
 
 void CDatabaseMgr::InsertStreamTable(CSimpleArray<video_stream> *pArray)
@@ -722,7 +756,7 @@ void CDatabaseMgr::DeleteCameraTable(CSimpleArray <camera> *pArray, BYTE bOperat
 	}
 }
 
-void CDatabaseMgr::DeleteEventActionTable(CSimpleArray<ec_Event_Action> *pArray)
+void CDatabaseMgr::DeleteEventActionTable(CSimpleArray<eventaction> *pArray)
 {
 
 }
@@ -940,7 +974,7 @@ void CDatabaseMgr::UpdateCameraTable(CSimpleArray <camera> *pArray, BYTE bOperat
 	}
 }
 
-void CDatabaseMgr::UpdateEventActionTable(CSimpleArray<ec_Event_Action> *pArray)
+void CDatabaseMgr::UpdateEventActionTable(CSimpleArray<eventaction> *pArray)
 {
 
 }
