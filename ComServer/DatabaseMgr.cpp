@@ -758,7 +758,15 @@ void CDatabaseMgr::DeleteCameraTable(CSimpleArray <camera> *pArray, BYTE bOperat
 
 void CDatabaseMgr::DeleteEventActionTable(CSimpleArray<eventaction> *pArray)
 {
+	if (pArray->GetSize())
+	{
+		CString strSql;
+		strSql.Format(_T("DELETE FROM ec_event_action WHERE actionid = %d"), 
+			(*pArray)[0].actionid);
 
+		m_ecEventAction.ModifyDatabase(strSql);
+		m_ecEventAction.CloseAll();	
+	}
 }
 
 void CDatabaseMgr::DeleteStreamTable(CSimpleArray <video_stream> *pArray, BYTE bOperation)
@@ -976,7 +984,15 @@ void CDatabaseMgr::UpdateCameraTable(CSimpleArray <camera> *pArray, BYTE bOperat
 
 void CDatabaseMgr::UpdateEventActionTable(CSimpleArray<eventaction> *pArray)
 {
+	if (pArray->GetSize())
+	{
+		CString strSql;
+		strSql.Format(_T("UPDATE ec_event_action SET camera_ip='%s',event_type=%d,action_type=%d,mail_target='%s' WHERE actionid= %d"), 
+			(*pArray)[0].source_mac,(*pArray)[0].event_type,(*pArray)[0].action_type,(*pArray)[0].target_mac,(*pArray)[0].actionid);
 
+		m_ecEventAction.ModifyDatabase(strSql);
+		m_ecEventAction.CloseAll();	
+	}
 }
 
 void CDatabaseMgr::UpdateStreamTable(CSimpleArray <video_stream> *pArray,BYTE bOperation)
