@@ -135,7 +135,7 @@ public:
 class Cec_event_log : public CCommand<CAccessor<Cec_event_logAccessor> >
 {
 public:
-	virtual HRESULT ModifyDatabase( const CString& strSQL )
+	virtual HRESULT ModifyDatabase(const CString& strSQL )
 	{
 		HRESULT hr;
 		::CoInitialize(NULL);

@@ -135,7 +135,7 @@ public:
 class Cec_storage : public CCommand<CAccessor<Cec_storageAccessor> >
 {
 public:
-	virtual HRESULT ModifyDatabase( const CString& strSQL )
+	virtual HRESULT ModifyDatabase(const CString& strSQL )
 	{
 		HRESULT hr;
 		::CoInitialize(NULL);

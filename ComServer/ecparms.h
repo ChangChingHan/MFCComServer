@@ -110,7 +110,7 @@ public:
 class Cecparms : public CCommand<CAccessor<CecparmsAccessor> >
 {
 public:
-	virtual HRESULT ModifyDatabase( const CString& strSQL )
+	virtual HRESULT ModifyDatabase(const CString& strSQL )
 	{
 		HRESULT hr;
 		::CoInitialize(NULL);

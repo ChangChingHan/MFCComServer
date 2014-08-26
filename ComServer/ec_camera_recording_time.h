@@ -125,7 +125,7 @@ public:
 class Cec_camera_recording_time : public CCommand<CAccessor<Cec_camera_recording_timeAccessor> >
 {
 public:
-	virtual HRESULT ModifyDatabase( const CString& strSQL )
+	virtual HRESULT ModifyDatabase(const CString& strSQL )
 	{
 		HRESULT hr;
 		::CoInitialize(NULL);

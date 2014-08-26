@@ -321,6 +321,26 @@ void CDatabaseMgr::QueryEventActionTable(CSimpleArray<eventaction> *pArray, BYTE
 	eventaction tblData;
 	switch(bOperation)
 	{
+	case GET_EVENT_ACTION_BY_MAC:
+		{
+			if (pArray->GetSize())
+			{
+				CString str;
+				str.Format(_T("SELECT * FROM ec_event_action WHERE camera_ip='%s'"), (*pArray)[0].source_mac.c_str());
+				hr = m_ecEventAction.Query(str);
+				pArray->RemoveAll();
+				while(hr == S_OK && m_ecEventAction.MoveNext() == S_OK)
+				{
+					tblData.actionid		= m_ecEventAction.m_actionid;
+					tblData.event_type		= (EVENTTYPE)m_ecEventAction.m_event_type;
+					tblData.action_type		= (EVENT_ACTION)m_ecEventAction.m_action_type;
+					tblData.source_mac		= m_ecEventAction.m_camera_ip;
+					tblData.target_mac		= m_ecEventAction.m_mail_target;
+					pArray->Add(tblData);
+				}
+			}
+		}
+		break;
 	case GET_LAST_EVENT_ACTION:
 		{
 			hr = m_ecEventAction.OpenAll();

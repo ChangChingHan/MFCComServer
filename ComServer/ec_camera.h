@@ -291,7 +291,7 @@ public:
 class Cec_camera : public CCommand<CAccessor<Cec_cameraAccessor> >
 {
 public:
-	virtual HRESULT ModifyDatabase( const CString& strSQL )
+	virtual HRESULT ModifyDatabase(const CString& strSQL )
 	{
 		HRESULT hr;
 		::CoInitialize(NULL);

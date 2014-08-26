@@ -150,7 +150,7 @@ public:
 class Cec_stream : public CCommand<CAccessor<Cec_streamAccessor> >
 {
 public:
-	virtual HRESULT ModifyDatabase( const CString& strSQL )
+	virtual HRESULT ModifyDatabase(const CString& strSQL )
 	{
 		HRESULT hr;
 		::CoInitialize(NULL);

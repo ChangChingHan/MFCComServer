@@ -174,7 +174,6 @@
 				IgnoreImportLibrary="true"
 				AdditionalDependencies=" msdasc.lib"
 				LinkIncremental="2"
-				IgnoreDefaultLibraryNames=""
 				ModuleDefinitionFile=".\ComServer.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
