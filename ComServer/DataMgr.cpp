@@ -25,7 +25,7 @@ STDMETHODIMP CDataMgr::QueryFromDC(BYTE bDataType, BYTE bOperation, VARIANT* Var
 
 void CDataMgr::DatabaseOperation(BYTE bOperation, VARIANT* VarData)
 {
-	if (bOperation >= GET_GROUP && bOperation <= GET_EVENT_ACTION)
+	if (bOperation >= GET_GROUP && bOperation <= GET_LAST_EVENT_ACTION)
 	{
 		QueryDatabase(bOperation, VarData);
 	}
@@ -85,10 +85,10 @@ void CDataMgr::QueryDatabase(BYTE bOperation, VARIANT* VarData)
 		CSimpleArray<eventlog> *pArray = (CSimpleArray<eventlog>*)VarData;
 		m_databaseMgr.QueryEventLogTable(pArray);
 	}
-	else if (bOperation >= GET_EVENT_ACTION && bOperation <= GET_EVENT_ACTION)
+	else if (bOperation >= GET_EVENT_ACTION && bOperation <= GET_LAST_EVENT_ACTION)
 	{
 		CSimpleArray<eventaction> *pArray = (CSimpleArray<eventaction>*)VarData;
-		m_databaseMgr.QueryEventActionTable(pArray);
+		m_databaseMgr.QueryEventActionTable(pArray, bOperation);
 	}
 }
 void CDataMgr::InsertDatabase(BYTE bOperation, VARIANT* VarData)

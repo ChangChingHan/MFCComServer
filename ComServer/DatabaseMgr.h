@@ -28,7 +28,7 @@ public:
 	void QueryStorageTable(CSimpleArray<storage> *pArray);
 	void QueryECparmsTable(CSimpleArray<parameter> *pArray);
 	void QueryEventLogTable(CSimpleArray<eventlog> *pArray);
-	void QueryEventActionTable(CSimpleArray<eventaction> *pArray);
+	void QueryEventActionTable(CSimpleArray<eventaction> *pArray, BYTE bOperation);
 
 	void InsertGroupTable(CSimpleArray <group> *pArray);
 	void InsertCameraTable(CSimpleArray<camera> *pArray);

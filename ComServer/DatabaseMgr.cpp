@@ -315,22 +315,42 @@ void CDatabaseMgr::QueryStorageTable(CSimpleArray<storage> *pArray)
 	m_ecStorage.CloseAll();
 }
 
-void CDatabaseMgr::QueryEventActionTable(CSimpleArray<eventaction> *pArray)
+void CDatabaseMgr::QueryEventActionTable(CSimpleArray<eventaction> *pArray, BYTE bOperation)
 {
 	HRESULT hr;
 	eventaction tblData;
-	hr = m_ecEventAction.OpenAll();
-
-	while(hr == S_OK && m_ecEventAction.MoveNext() == S_OK)
+	switch(bOperation)
 	{
-		tblData.actionid		= m_ecEventAction.m_actionid;
-		tblData.event_type		= (EVENTTYPE)m_ecEventAction.m_event_type;
-		tblData.action_type		= (EVENT_ACTION)m_ecEventAction.m_action_type;
-		tblData.source_mac		= m_ecEventAction.m_camera_ip;
-		tblData.target_mac		= m_ecEventAction.m_mail_target;
-
-		pArray->Add(tblData);
+	case GET_LAST_EVENT_ACTION:
+		{
+			hr = m_ecEventAction.OpenAll();
+			if (hr == S_OK && m_ecEventAction.MoveLast() == S_OK)
+			{
+				tblData.actionid		= m_ecEventAction.m_actionid;
+				tblData.event_type		= (EVENTTYPE)m_ecEventAction.m_event_type;
+				tblData.action_type		= (EVENT_ACTION)m_ecEventAction.m_action_type;
+				tblData.source_mac		= m_ecEventAction.m_camera_ip;
+				tblData.target_mac		= m_ecEventAction.m_mail_target;
+				pArray->Add(tblData);
+			}
+		}
+		break;
+	case GET_EVENT_ACTION:
+		{
+			hr = m_ecEventAction.OpenAll();
+			while(hr == S_OK && m_ecEventAction.MoveNext() == S_OK)
+			{
+				tblData.actionid		= m_ecEventAction.m_actionid;
+				tblData.event_type		= (EVENTTYPE)m_ecEventAction.m_event_type;
+				tblData.action_type		= (EVENT_ACTION)m_ecEventAction.m_action_type;
+				tblData.source_mac		= m_ecEventAction.m_camera_ip;
+				tblData.target_mac		= m_ecEventAction.m_mail_target;
+				pArray->Add(tblData);
+			}
+		}
+		break;
 	}
+	
 	m_ecEventAction.CloseAll();	
 }
 
