@@ -497,7 +497,7 @@ void CDatabaseMgr::InsertCameraTable(CSimpleArray<camera> *pArray)
 		str.Empty();
 		str.Format( 
 			_T(
-			"INSERT INTO ec_camera(camera_idx, cameraname, connect_type_code, ipaddress, httpport, gateway, name_server, mac_address, username, password, brand_code, model_code, ptz_support, ptz_protocol,digital_in1,digital_in2,digital_out,video_format,speaker_support,mic_support,subnet_mask1,subnet_mask2,subnet_mask3,subnet_mask4,H264,total_stream,active_,stream_url) VALUES ('%d', '%s', '%s', '%s', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%d','%d','%s','%s')"),
+			"INSERT INTO ec_camera(camera_idx, cameraname, connect_type_code, ipaddress, httpport, gateway, name_server, mac_address, username, password, brand_code, model_code, ptz_support, ptz_protocol,digital_in1,digital_in2,digital_out,video_format,speaker_support,mic_support,subnet_mask1,subnet_mask2,subnet_mask3,subnet_mask4,total_stream,active_,stream_url) VALUES ('%d', '%s', '%s', '%s', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%d','%s','%s')"),
 			(*pArray)[nIdx].camera_idx,
 			(*pArray)[nIdx].cameraname.c_str(),
 			(*pArray)[nIdx].connect_type_code.c_str(), 
@@ -522,7 +522,6 @@ void CDatabaseMgr::InsertCameraTable(CSimpleArray<camera> *pArray)
 			(*pArray)[nIdx].subnet_mask2.c_str(),
 			(*pArray)[nIdx].subnet_mask3.c_str(),
 			(*pArray)[nIdx].subnet_mask4.c_str(),
-			(*pArray)[nIdx].isURL,
 			0,
 			(*pArray)[nIdx].active_.c_str(),
 			(*pArray)[nIdx].stream_url.c_str()

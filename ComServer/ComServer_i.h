@@ -4,12 +4,12 @@
 
 
  /* File created by MIDL compiler version 7.00.0500 */
-/* at Tue Aug 26 16:42:01 2014
+/* at Thu Aug 28 15:20:29 2014
  */
 /* Compiler settings for .\ComServer.idl:
-    Oicf, W1, Zp8, env=Win64 (32b run)
+    Oicf, W1, Zp8, env=Win32 (32b run)
     protocol : dce , ms_ext, c_ext, robust
-    error checks: allocation ref bounds_check enum stub_data 
+    error checks: stub_data 
     VC __declspec() decoration level: 
          __declspec(uuid()), __declspec(selectany), __declspec(novtable)
          DECLSPEC_UUID(), MIDL_INTERFACE()

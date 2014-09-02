@@ -109,6 +109,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="copy .\debug\ComServer.dll ..\..\..\bin\x86\ComServer&#x0D;&#x0A;copy .\debug\ComServer.dll N:\Bin\x86\ComServer&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -199,6 +200,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="copy .\x64\debug\ComServer.dll ..\..\..\bin\x64&#x0D;&#x0A;copy .\x64\debug\ComServer.dll N:\Bin\x64\ComServer&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -239,6 +241,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
+				AdditionalIncludeDirectories="N:\Include"
 				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL;_MERGE_PROXYSTUB"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
@@ -290,6 +293,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="copy .\release\ComServer.dll ..\..\..\bin\x86\ComServer&#x0D;&#x0A;copy .\release\ComServer.dll N:\Bin\x86\ComServer&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -329,6 +333,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
+				AdditionalIncludeDirectories="N:\Include"
 				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL;_MERGE_PROXYSTUB"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
@@ -379,6 +384,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="copy .\x64\release\ComServer.dll ..\..\..\bin\x64\ComServer&#x0D;&#x0A;copy .\x64\release\ComServer.dll N:\Bin\x64\ComServer&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>

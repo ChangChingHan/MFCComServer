@@ -31,6 +31,7 @@ using namespace ATL;
 #include <vector>
 using namespace std;
 
+#include "GlobalDef.h"
 #include "DataStructure.h"
 #include "EtroAccessor.h"
 #include <atlcoll.h>
