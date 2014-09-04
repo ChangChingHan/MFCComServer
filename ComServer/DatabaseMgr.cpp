@@ -386,7 +386,7 @@ void CDatabaseMgr::QueryEventLogTable(CSimpleArray<eventlog> *pArray)
 		CString str;
 		if (tblData.logcount)
 		{
-			str.Format(_T("SELECT TOP %d *FROM ec_event_log"), tblData.logcount);
+			str.Format(_T("SELECT TOP %d *FROM ec_event_log order by event_key desc"), tblData.logcount);
 		}
 		else
 		{

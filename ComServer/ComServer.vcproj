@@ -109,7 +109,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy .\debug\ComServer.dll ..\..\..\bin\x86\ComServer&#x0D;&#x0A;copy .\debug\ComServer.dll N:\Bin\x86\ComServer&#x0D;&#x0A;"
+				CommandLine="copy .\debug\ComServer.dll ..\..\..\bin\x86&#x0D;&#x0A;copy .\debug\ComServer.dll N:\Bin\x86\ComServer&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
