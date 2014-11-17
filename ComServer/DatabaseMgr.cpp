@@ -1,23 +1,65 @@
 #include "StdAfx.h"
 #include "DatabaseMgr.h"
+#include <queue>
 
+HANDLE g_handle = NULL;
+bool g_bWriteEventLog = false;
+
+queue<eventlog> g_eventlogQueue;
+unsigned __stdcall write_event_log(void* pArguments);
+
+unsigned __stdcall write_event_log(void* pArguments)
+{
+	CDatabaseMgr *pthis = (CDatabaseMgr*)pArguments;
+	eventlog eventLog;
+	CString strSql;
+
+	while(g_bWriteEventLog)
+	{
+		if (g_eventlogQueue.size())
+		{
+			eventLog = g_eventlogQueue.front();
+			EnterCriticalSection(&pthis->m_criSec);
+			g_eventlogQueue.pop();
+			LeaveCriticalSection(&pthis->m_criSec);
+			
+			strSql.Empty();
+				strSql.Format(_T("INSERT INTO ec_event_log (eventid, event_type_code, occur_time, mac_address, end_time) VALUES ('%d', '%d', '%s', '%s', '%s')"), 
+					pthis->TransIP2DWORD(eventLog.ipaddress.c_str()),
+					(DWORD)eventLog.event_type,
+					pthis->DateTimeFormat(eventLog.start_time),
+					eventLog.device_mac.c_str(),
+					pthis->DateTimeFormat(eventLog.end_time));
+
+			pthis->GetEventLogHandle()->ModifyDatabase(strSql);
+			pthis->GetEventLogHandle()->CloseAll();
+		}
+		Sleep(500);
+	}
+	return 0;
+}
 CDatabaseMgr::CDatabaseMgr(void)
 {
-	m_CameraArray.RemoveAll();
-	m_GroupCamArray.RemoveAll();
-	m_GroupArray.RemoveAll();
-
-	m_DeviceGroupArray.RemoveAll();
-	m_LayoutGroupArray.RemoveAll();
+	InitializeCriticalSection (&m_criSec);
+	FlushData();
 }
 
 CDatabaseMgr::~CDatabaseMgr(void)
 {
+	g_bWriteEventLog = false;
+	if (g_handle)
+	{
+		WaitForSingleObject( g_handle, INFINITE );
+		CloseHandle(g_handle);
+		g_handle = NULL;
+	}
+	DeleteCriticalSection(&m_criSec);
 }
 
 void CDatabaseMgr::QueryGroupTable(CSimpleArray <group> *pArray, BYTE bOperation, BOOL bUpdate)
 {
 	group tblData;
+	HRESULT hr = NULL;
 	
 	CSimpleArray<group> *pCacheArray = NULL;
 
@@ -26,21 +68,12 @@ void CDatabaseMgr::QueryGroupTable(CSimpleArray <group> *pArray, BYTE bOperation
 	case GET_GROUP:
 		{
 			int n = m_GroupArray.GetSize();
-			CString str;
-			str.Format(_T("myname is lynn size = %d"),n);
-			::OutputDebugString(str);
-
-			HANDLE hCameraRecording = CreateEvent(NULL, false, false, _T("Global\\LYNN"));
-			if (hCameraRecording != NULL)
-				SetEvent( hCameraRecording );
-			CloseHandle(hCameraRecording);
-
 			if (m_GroupArray.GetSize())
 			{
 				*pArray = m_GroupArray;
 				return;
 			}
-			m_ecGroup.OpenAll();
+			hr = m_ecGroup.OpenAll();
 		}
 		break;
 	case GET_GROUP_BY_DEVICE:
@@ -50,7 +83,7 @@ void CDatabaseMgr::QueryGroupTable(CSimpleArray <group> *pArray, BYTE bOperation
 				*pArray = m_DeviceGroupArray;
 				return;
 			}
-			m_ecGroup.Query(_T("select * from ec_camera_group where category_code = 1 order by cameragroupid"));
+			hr = m_ecGroup.Query(_T("select * from ec_camera_group where category_code = 1 order by cameragroupid"));
 		}
 		break;
 	case GET_GROUP_BY_LAYOUT:
@@ -60,14 +93,14 @@ void CDatabaseMgr::QueryGroupTable(CSimpleArray <group> *pArray, BYTE bOperation
 				*pArray = m_LayoutGroupArray;
 				return;
 			}
-			m_ecGroup.Query(_T("select * from ec_camera_group where category_code = 2 order by cameragroupid"));
+			hr = m_ecGroup.Query(_T("select * from ec_camera_group where category_code = 2 order by cameragroupid"));
 		}
 		break;
 	default:
 		return;
 	}
 
-	while(m_ecGroup.MoveNext() == S_OK)
+	while(hr == S_OK && m_ecGroup.MoveNext() == S_OK)
 	{
 		tblData.cameragroupid		= m_ecGroup.m_cameragroupid;
 		tblData.camera_group_desc	= m_ecGroup.m_camera_group_desc;
@@ -94,6 +127,7 @@ void CDatabaseMgr::QueryGroupTable(CSimpleArray <group> *pArray, BYTE bOperation
 void CDatabaseMgr::QueryGroupCamTable(CSimpleArray <group_camera> *pArray, BYTE bOperation, BOOL bUpdate)
 {
 	group_camera tblData;
+	HRESULT hr = NULL;
 
 	switch(bOperation)
 	{
@@ -104,7 +138,7 @@ void CDatabaseMgr::QueryGroupCamTable(CSimpleArray <group_camera> *pArray, BYTE 
 				*pArray = m_GroupCamArray;
 				return;
 			}
-			m_ecGroup_Camera.OpenAll();
+			hr = m_ecGroup_Camera.OpenAll();
 		}
 		break;
 	case GET_LAST_GROUP_CAM:
@@ -114,18 +148,19 @@ void CDatabaseMgr::QueryGroupCamTable(CSimpleArray <group_camera> *pArray, BYTE 
 				pArray->Add(m_GroupCamArray[m_GroupCamArray.GetSize()-1]);
 				return;
 			}
-			m_ecGroup_Camera.Query(_T("select top 1 *from ec_camera_group_camera order by cameragroupcameraid desc"));
+			hr = m_ecGroup_Camera.Query(_T("select top 1 *from ec_camera_group_camera order by cameragroupcameraid desc"));
 		}
 		break;
 	case GET_GROUP_CAM_BY_STATION:
 		{
-			m_ecGroup_Camera.Query(_T("SELECT *FROM ec_camera_group_camera ORDER BY numb_"));
+			hr = m_ecGroup_Camera.Query(_T("SELECT *FROM ec_camera_group_camera ORDER BY numb_"));
 		}
+		break;
 	default:
 		return;
 	}
 
-	while(m_ecGroup_Camera.MoveNext() == S_OK)
+	while(hr == S_OK && m_ecGroup_Camera.MoveNext() == S_OK)
 	{
 		tblData.cameragroupcameraid	= m_ecGroup_Camera.m_cameragroupcameraid;
 		tblData.cameragroupid		= m_ecGroup_Camera.m_cameragroupid;
@@ -152,12 +187,13 @@ void CDatabaseMgr::QueryGroupCamTable(CSimpleArray <group_camera> *pArray, BYTE 
 void CDatabaseMgr::QueryStreamTable(CSimpleArray <video_stream> *pArray, BYTE bOperation)
 {
 	video_stream tblData;
+	HRESULT hr = NULL;
 
 	switch(bOperation)
 	{
 	case GET_STREAM:
 		{
-			m_ecStream.OpenAll();
+			hr = m_ecStream.OpenAll();
 		}
 		break;
 	case GET_STREAM_BY_ID:
@@ -167,7 +203,7 @@ void CDatabaseMgr::QueryStreamTable(CSimpleArray <video_stream> *pArray, BYTE bO
 				int nCameraid = (*pArray)[0].cameraid;
 				CString str;
 				str.Format(_T("select * from ec_stream where cameraid = '%d'"), nCameraid);
-				m_ecStream.Query(str);
+				hr = m_ecStream.Query(str);
 				pArray->RemoveAll();
 			}
 		}
@@ -176,7 +212,7 @@ void CDatabaseMgr::QueryStreamTable(CSimpleArray <video_stream> *pArray, BYTE bO
 		return;
 	}
 
-	while(m_ecStream.MoveNext() == S_OK)
+	while(hr == S_OK && m_ecStream.MoveNext() == S_OK)
 	{
 		tblData.stream_name		= m_ecStream.m_stream_name;
 		tblData.stream_tag		= m_ecStream.m_stream_tag;
@@ -197,6 +233,7 @@ void CDatabaseMgr::QueryStreamTable(CSimpleArray <video_stream> *pArray, BYTE bO
 void CDatabaseMgr::QueryCameraTable(CSimpleArray<camera> *pArray, BYTE bOperation, BOOL bUpdate)
 {
 	camera tblData;
+	HRESULT hr;
 
 	switch(bOperation)
 	{
@@ -207,19 +244,24 @@ void CDatabaseMgr::QueryCameraTable(CSimpleArray<camera> *pArray, BYTE bOperatio
 				*pArray = m_CameraArray;
 				return;
 			}
-			m_ecCamera.OpenAll();
+			hr = m_ecCamera.OpenAll();
 		}
 		break;
 	case GET_CAM_BY_INDEX:
 		{
-			m_ecCamera.Query(_T("SELECT *FROM ec_camera ORDER BY camera_idx"));
+			hr = m_ecCamera.Query(_T("SELECT *FROM ec_camera ORDER BY camera_idx"));
+		}
+		break;
+	case GET_LAST_CAM:
+		{
+			hr = m_ecCamera.Query(_T("SELECT TOP 1 *FROM ec_camera ORDER BY cameraid desc"));
 		}
 		break;
 	default:
 		return;
 	}
 
-	while(m_ecCamera.MoveNext() == S_OK)
+	while(hr == S_OK && m_ecCamera.MoveNext() == S_OK)
 	{
 		if(m_ecCamera.m_H264 && _wtoi(m_ecCamera.m_H264) == 1)
 			tblData.isURL = true;
@@ -268,12 +310,13 @@ void CDatabaseMgr::QueryCameraTable(CSimpleArray<camera> *pArray, BYTE bOperatio
 
 void CDatabaseMgr::QueryCameraRecordTable(CSimpleArray<video_record> *pArray)
 {
+	HRESULT hr = NULL;
 	video_record tblData;
-	m_ecRecording.OpenAll();
+	hr = m_ecRecording.OpenAll();
 	int nIdx = 0, nCoun = 0;
 	wchar_t buffer[3];
 
-	while(m_ecRecording.MoveNext() == S_OK)
+	while(hr == S_OK && m_ecRecording.MoveNext() == S_OK)
 	{
 		tblData.camera_idx			= m_ecRecording.m_camera_idx;
 		tblData.recording_type		= m_ecRecording.m_recording_type;
@@ -292,20 +335,25 @@ void CDatabaseMgr::QueryCameraRecordTable(CSimpleArray<video_record> *pArray)
 void CDatabaseMgr::QueryStorageTable(CSimpleArray<storage> *pArray)
 {
 	storage tblData;
+	HRESULT hr = NULL;
 
 	if (pArray->GetSize())
 	{
 		CString str;
 		str.Format(_T("SELECT * FROM ec_storage WHERE storage_type='%s'"), (*pArray)[0].storage_type.c_str());
-		m_ecStorage.Query(str);
+		hr = m_ecStorage.Query(str);
 		pArray->RemoveAll();
 	}
 
-	while(m_ecStorage.MoveNext() == S_OK)
+	wchar_t buffer_size[5];
+	while(hr == S_OK && m_ecStorage.MoveNext() == S_OK)
 	{
 		tblData.storage_type		= m_ecStorage.m_storage_type;
 		tblData.store_location		= m_ecStorage.m_store_location;
-		tblData.buffer_size			= m_ecStorage.m_buffer_size;
+
+		swprintf(buffer_size, 5, _T("%d"),m_ecStorage.m_buffer_size);
+		tblData.buffer_size			= buffer_size;
+
 		tblData.server_user			= m_ecStorage.m_server_user;
 		tblData.server_password		= m_ecStorage.m_server_password;
 		
@@ -317,7 +365,7 @@ void CDatabaseMgr::QueryStorageTable(CSimpleArray<storage> *pArray)
 
 void CDatabaseMgr::QueryEventActionTable(CSimpleArray<eventaction> *pArray, BYTE bOperation)
 {
-	HRESULT hr;
+	HRESULT hr = NULL;
 	eventaction tblData;
 	switch(bOperation)
 	{
@@ -374,87 +422,136 @@ void CDatabaseMgr::QueryEventActionTable(CSimpleArray<eventaction> *pArray, BYTE
 	m_ecEventAction.CloseAll();	
 }
 
-void CDatabaseMgr::QueryEventLogTable(CSimpleArray<eventlog> *pArray)
+void CDatabaseMgr::QueryEventLogTable(CSimpleArray<eventlog> *pArray, BYTE bOperation)
 {
-	HRESULT hr;
-	eventlog tblData;
-	if(pArray && pArray->GetSize())
-		tblData = (*pArray)[0];
-
-	if (pArray->GetSize())
+	HRESULT hr = NULL;
+	if (bOperation == GET_EVENT_LOG_COUNT)
 	{
+		eventlog tblData;
+		//CString str(_T("SELECT COUNT(event_key) as event_key FROM ec_event_log"));
+		//hr = m_ecEventLog.Query(str);
+		hr = m_ecEventLog.OpenAll();
+		if(hr == S_OK)
+		{
+			int nFirst = 0;
+			if(m_ecEventLog.MoveNext() == S_OK)
+				nFirst = m_ecEventLog.m_event_key;
+			if(m_ecEventLog.MoveLast() == S_OK)
+				tblData.logcount = m_ecEventLog.m_event_key - nFirst +1;
+
+			pArray->Add(tblData);
+		}
+		m_ecEventLog.CloseAll();
+	}
+	else if (bOperation == GET_EVENT_LOG_BY_INDEX)
+	{
+		eventlog tblDataFrom,tblDataTo,tblData;
+		if(pArray && pArray->GetSize()>=2)
+		{
+			tblDataFrom = (*pArray)[0];
+			tblDataTo = (*pArray)[1];
+		}
 		CString str;
-		if (tblData.logcount)
-		{
-			str.Format(_T("SELECT TOP %d *FROM ec_event_log order by event_key desc"), tblData.logcount);
-		}
-		else
-		{
-			BOOL bAddSubStr = false;
-			CString strTemp;
-			str = (_T("SELECT *FROM ec_event_log where "));
-			if (tblData.event_type != NULL_EVENT_TYPE)
-			{
-				strTemp.Format(_T("event_type_code = %d "),tblData.event_type);
-				str += strTemp;
-				bAddSubStr = TRUE;
-			}
+		str.Format(_T("select top %d * from ec_event_log where event_key not in (select top %d event_key from ec_event_log)"),
+			(tblDataTo.logcount-tblDataFrom.logcount+1), (tblDataFrom.logcount-1));
 
-			if(tblData.device_mac.length())
-			{
-				strTemp.Format(_T("mac_address = '%s' "),tblData.device_mac.c_str());
-				if (bAddSubStr)
-				{
-					str += _T("and ");
-				}
-				str += strTemp;
-				bAddSubStr = TRUE;
-			}
-
-			if(tblData.start_time.year != 0)
-			{
-				CString strStartTime = DateTimeFormat(tblData.start_time);
-				CString strEndTime = DateTimeFormat(tblData.end_time);
-				strTemp.Format(_T("occur_time >= '%s' and end_time <= '%s'"),strStartTime,strEndTime);
-
-				if (bAddSubStr)
-				{
-					str += _T("and ");
-				}
-				str += strTemp;
-			}
-		}
-		
 		hr = m_ecEventLog.Query(str);
 		pArray->RemoveAll();
+		while(hr == S_OK && m_ecEventLog.MoveNext() == S_OK)
+		{
+			tblData.logid			= m_ecEventLog.m_event_key;
+			tblData.event_type		= (EVENTTYPE)_wtoi(m_ecEventLog.m_event_type_code);
+			tblData.start_time		= m_ecEventLog.m_occur_time;
+			tblData.end_time		= m_ecEventLog.m_end_time;
+			tblData.device_mac		= m_ecEventLog.m_mac_address;
+			tblData.ipaddress		= TransDWORD2IP(m_ecEventLog.m_eventid);
+			pArray->Add(tblData);
+		}
+		m_ecEventLog.CloseAll();
 	}
-
-	while(hr == S_OK && m_ecEventLog.MoveNext() == S_OK)
+	else
 	{
-		tblData.logid			= m_ecEventLog.m_event_key;
-		tblData.event_type		= (EVENTTYPE)_wtoi(m_ecEventLog.m_event_type_code);
-		tblData.start_time		= m_ecEventLog.m_occur_time;
-		tblData.end_time		= m_ecEventLog.m_end_time;
-		tblData.device_mac		= m_ecEventLog.m_mac_address;
-		
-		pArray->Add(tblData);
+		eventlog tblData;
+		if(pArray && pArray->GetSize())
+			tblData = (*pArray)[0];
+
+		if (pArray->GetSize())
+		{
+			CString str;
+			if (tblData.logcount)
+			{
+				str.Format(_T("SELECT TOP %d *FROM ec_event_log order by event_key desc"), tblData.logcount);
+			}
+			else
+			{
+				BOOL bAddSubStr = false;
+				CString strTemp;
+				str = (_T("SELECT *FROM ec_event_log where "));
+				if (tblData.event_type != NULL_EVENT_TYPE)
+				{
+					strTemp.Format(_T("event_type_code = %d "),tblData.event_type);
+					str += strTemp;
+					bAddSubStr = TRUE;
+				}
+
+				if(tblData.device_mac.length())
+				{
+					strTemp.Format(_T("mac_address = '%s' "),tblData.device_mac.c_str());
+					if (bAddSubStr)
+					{
+						str += _T("and ");
+					}
+					str += strTemp;
+					bAddSubStr = TRUE;
+				}
+
+				if(tblData.start_time.year != 0)
+				{
+					CString strStartTime = DateTimeFormat(tblData.start_time);
+					CString strEndTime = DateTimeFormat(tblData.end_time);
+					strTemp.Format(_T("occur_time >= '%s' and end_time <= '%s'"),strStartTime,strEndTime);
+
+					if (bAddSubStr)
+					{
+						str += _T("and ");
+					}
+					str += strTemp;
+				}
+			}
+
+			hr = m_ecEventLog.Query(str);
+			pArray->RemoveAll();
+
+			while(hr == S_OK && m_ecEventLog.MoveNext() == S_OK)
+			{
+				tblData.logid			= m_ecEventLog.m_event_key;
+				tblData.event_type		= (EVENTTYPE)_wtoi(m_ecEventLog.m_event_type_code);
+				tblData.start_time		= m_ecEventLog.m_occur_time;
+				tblData.end_time		= m_ecEventLog.m_end_time;
+				tblData.device_mac		= m_ecEventLog.m_mac_address;
+				tblData.ipaddress		= TransDWORD2IP(m_ecEventLog.m_eventid);
+
+				pArray->Add(tblData);
+			}
+			m_ecEventLog.CloseAll();
+		}
 	}
-	m_ecEventLog.CloseAll();
 }
 
 void CDatabaseMgr::QueryECparmsTable(CSimpleArray<parameter> *pArray)
 {
 	parameter tblData;
+	HRESULT hr = NULL;
 
 	if (pArray->GetSize())
 	{
 		CString str;
 		str.Format(_T("SELECT *FROM ecparms WHERE parm_name = '%s'"), (*pArray)[0].parm_name.c_str());
-		m_ecParam.Query(str);
+		hr = m_ecParam.Query(str);
 		pArray->RemoveAll();
 	}
 
-	while(m_ecParam.MoveNext() == S_OK)
+	while(hr == S_OK && m_ecParam.MoveNext() == S_OK)
 	{
 		tblData.parm_name		= m_ecParam.m_parm_name;
 		tblData.parm_value		= m_ecParam.m_parm_value;
@@ -497,7 +594,7 @@ void CDatabaseMgr::InsertCameraTable(CSimpleArray<camera> *pArray)
 		str.Empty();
 		str.Format( 
 			_T(
-			"INSERT INTO ec_camera(camera_idx, cameraname, connect_type_code, ipaddress, httpport, gateway, name_server, mac_address, username, password, brand_code, model_code, ptz_support, ptz_protocol,digital_in1,digital_in2,digital_out,video_format,speaker_support,mic_support,subnet_mask1,subnet_mask2,subnet_mask3,subnet_mask4,total_stream,active_,stream_url) VALUES ('%d', '%s', '%s', '%s', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%d','%s','%s')"),
+			"INSERT INTO ec_camera(camera_idx, cameraname, connect_type_code, ipaddress, httpport, \gateway, name_server, mac_address, username, password, brand_code, model_code, ptz_support, ptz_protocol,digital_in1,digital_in2,digital_out,video_format,speaker_support,mic_support,subnet_mask1,subnet_mask2,subnet_mask3,subnet_mask4,total_stream,active_,stream_url) VALUES ('%d', '%s', '%s', '%s', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%d','%s','%s')"),
 			(*pArray)[nIdx].camera_idx,
 			(*pArray)[nIdx].cameraname.c_str(),
 			(*pArray)[nIdx].connect_type_code.c_str(), 
@@ -522,7 +619,7 @@ void CDatabaseMgr::InsertCameraTable(CSimpleArray<camera> *pArray)
 			(*pArray)[nIdx].subnet_mask2.c_str(),
 			(*pArray)[nIdx].subnet_mask3.c_str(),
 			(*pArray)[nIdx].subnet_mask4.c_str(),
-			0,
+			(*pArray)[nIdx].total_stream_count,
 			(*pArray)[nIdx].active_.c_str(),
 			(*pArray)[nIdx].stream_url.c_str()
 			);
@@ -580,7 +677,7 @@ void CDatabaseMgr::InsertGroupCamTable(CSimpleArray<group_camera> *pArray)
 
 void CDatabaseMgr::InsertEventActionTable(CSimpleArray<eventaction> *pArray)
 {
-	HRESULT hr;
+	HRESULT hr = NULL;
 	eventaction tblData;
 
 	int nIdx = 0, nCount = pArray->GetSize();
@@ -627,6 +724,81 @@ void CDatabaseMgr::InsertStreamTable(CSimpleArray<video_stream> *pArray)
 	}
 	m_ecStream.ModifyDatabase(strSql);
 	m_ecStream.CloseAll();
+}
+
+wstring CDatabaseMgr::TransDWORD2IP(DWORD dwIP)
+{
+	wstring str;
+	byte FourthByte = (dwIP&FILTER_FOURTH_BYTE) >> 24;
+	byte ThirdByte = (dwIP&FILTER_THIRD_BYTE) >> 16;
+	byte SecondByte = (dwIP&FILTER_SECOND_BYTE) >> 8;
+	byte FirstByte = (dwIP&FILTER_FIRST_BYTE);
+
+	wchar_t wstr[20];
+	swprintf_s(wstr, 20, _T("%d.%d.%d.%d"), FourthByte,ThirdByte,SecondByte,FirstByte);
+	str = wstr;
+	return str;
+}
+
+DWORD CDatabaseMgr::TransIP2DWORD(wstring strIP)
+{
+	DWORD dwIP = 0;
+
+	wchar_t *token1 = NULL, *token2 = NULL, *token3 = NULL, *token4 = NULL;
+	wchar_t *next_token = NULL;
+	wchar_t string[80];
+
+	wcscpy_s(string,strIP.length()+1,strIP.c_str());
+	byte FourthByte = _ttoi(wcstok_s(string, _T("."),&next_token));
+	byte ThirdByte = _ttoi(wcstok_s(NULL, _T("."),&next_token));
+	byte SecondByte = _ttoi(wcstok_s(NULL, _T("."),&next_token));
+	byte FirstByte = _ttoi(wcstok_s(NULL, _T("."),&next_token));
+
+	dwIP += FourthByte << 24;
+	dwIP += ThirdByte << 16;
+	dwIP += SecondByte << 8;
+	dwIP += FirstByte;
+
+	return dwIP;
+}
+
+void CDatabaseMgr::InsertEventLogTable(CSimpleArray<eventlog> *pArray)
+{
+	if (!g_bWriteEventLog)
+	{
+		g_bWriteEventLog = true;
+		g_handle = (HANDLE)::_beginthreadex(NULL, 0, write_event_log, (LPVOID)this, 0, NULL);
+	}
+
+	int nIdx = 0, nCount = pArray->GetSize();
+	for (nIdx = 0; nIdx < nCount; nIdx++)
+	{
+		EnterCriticalSection(&m_criSec);
+		g_eventlogQueue.push((*pArray)[nIdx]);
+		LeaveCriticalSection(&m_criSec);
+	}
+
+
+	/*if (m_eventLogArray.size() > 5)
+	{
+		int nIdx = 0, nCount = m_eventLogArray.size();
+		CString str, strSql;
+		for (nIdx = 0; nIdx < nCount; nIdx++)
+		{
+			str.Empty();
+			str.Format(_T("INSERT INTO ec_event_log (eventid, event_type_code, occur_time, mac_address, end_time) VALUES ('%d', '%d', '%s', '%s', '%s')"), 
+				TransIP2DWORD(m_eventLogArray[nIdx].ipaddress.c_str()),
+				(DWORD)m_eventLogArray[nIdx].event_type,
+				DateTimeFormat(m_eventLogArray[nIdx].start_time),
+				m_eventLogArray[nIdx].device_mac.c_str(),
+				DateTimeFormat(m_eventLogArray[nIdx].end_time));
+
+			strSql += str;
+		}
+		m_ecEventLog.ModifyDatabase(strSql);
+		m_ecEventLog.CloseAll();
+		m_eventLogArray.clear();
+	}*/
 }
 
 void CDatabaseMgr::DeleteGroupTable(CSimpleArray <group> *pArray, BYTE bOperation)
@@ -800,9 +972,17 @@ void CDatabaseMgr::DeleteEventActionTable(CSimpleArray<eventaction> *pArray)
 	if (pArray->GetSize())
 	{
 		CString strSql;
-		strSql.Format(_T("DELETE FROM ec_event_action WHERE actionid = %d"), 
-			(*pArray)[0].actionid);
+		CString str;
 
+		int nIdx = 0, nCount = pArray->GetSize();
+		for (nIdx = 0; nIdx < nCount; nIdx++)
+		{
+			str.Empty();
+			str.Format(_T("DELETE FROM ec_event_action WHERE actionid = %d"), 
+				(*pArray)[nIdx].actionid);
+
+			strSql += str;
+		}
 		m_ecEventAction.ModifyDatabase(strSql);
 		m_ecEventAction.CloseAll();	
 	}
@@ -976,7 +1156,7 @@ void CDatabaseMgr::UpdateCameraTable(CSimpleArray <camera> *pArray, BYTE bOperat
 			{
 				CString strSql;
 
-				strSql.Format(_T("UPDATE ec_camera set camera_idx='%d',cameraname='%s',connect_type_code='%s',ipaddress='%s',httpport='%d',gateway='%s',name_server='%s',mac_address='%s',username='%s',password='%s',brand_code='%s',model_code='%s',ptz_support='%s',ptz_protocol='%s',digital_in1='%s',digital_in2='%s',digital_out='%s',video_format='%s',speaker_support='%s',mic_support='%s',subnet_mask1='%s',subnet_mask2='%s',subnet_mask3='%s',subnet_mask4='%s',total_stream='%d',active_='%s',stream_url='%s' where cameraid='%d'"),
+				strSql.Format(_T("UPDATE ec_camera set camera_idx='%d',cameraname='%s',connect_type_code='%s',ipaddress='%s',httpport='%d',gateway='%s',name_server='%s',mac_address='%s',username='%s',password='%s',brand_code='%s',model_code='%s',ptz_support='%s',ptz_protocol='%s',digital_in1='%s',digital_in2='%s',digital_out='%s',video_format='%s',speaker_support='%s',mic_support='%s',total_stream='%d',active_='%s',stream_url='%s' where cameraid='%d'"),
 					(*pArray)[0].camera_idx,
 					(*pArray)[0].cameraname.c_str(),
 					(*pArray)[0].connect_type_code.c_str(), 
@@ -997,16 +1177,13 @@ void CDatabaseMgr::UpdateCameraTable(CSimpleArray <camera> *pArray, BYTE bOperat
 					(*pArray)[0].video_format.c_str(),
 					(*pArray)[0].speaker_support.c_str(),
 					(*pArray)[0].mic_support.c_str(),
-					(*pArray)[0].subnet_mask1.c_str(),
-					(*pArray)[0].subnet_mask2.c_str(),
-					(*pArray)[0].subnet_mask3.c_str(),
-					(*pArray)[0].subnet_mask4.c_str(),
-					0,
+					(*pArray)[0].total_stream_count,
 					(*pArray)[0].active_.c_str(),
 					(*pArray)[0].stream_url.c_str(),
 					(*pArray)[0].cameraid);
 
-				m_ecCamera.ModifyDatabase(strSql);
+				HRESULT hr = m_ecCamera.ModifyDatabase(strSql);
+				bExecute = true;
 			}
 		}
 		break;
@@ -1026,9 +1203,21 @@ void CDatabaseMgr::UpdateEventActionTable(CSimpleArray<eventaction> *pArray)
 	if (pArray->GetSize())
 	{
 		CString strSql;
-		strSql.Format(_T("UPDATE ec_event_action SET camera_ip='%s',event_type=%d,action_type=%d,mail_target='%s' WHERE actionid= %d"), 
-			(*pArray)[0].source_mac,(*pArray)[0].event_type,(*pArray)[0].action_type,(*pArray)[0].target_mac,(*pArray)[0].actionid);
+		CString str;
 
+		int nIdx = 0, nCount = pArray->GetSize();
+		for (nIdx = 0; nIdx < nCount; nIdx++)
+		{
+			str.Empty();
+			str.Format(_T("UPDATE ec_event_action SET camera_ip='%s',event_type=%d,action_type=%d,mail_target='%s' WHERE actionid= %d"), 
+				(*pArray)[nIdx].source_mac.c_str(),
+				(DWORD)(*pArray)[nIdx].event_type,
+				(DWORD)(*pArray)[nIdx].action_type,
+				(*pArray)[nIdx].target_mac.c_str(),
+				(*pArray)[nIdx].actionid);
+
+			strSql += str;
+		}
 		m_ecEventAction.ModifyDatabase(strSql);
 		m_ecEventAction.CloseAll();	
 	}
@@ -1041,16 +1230,23 @@ void CDatabaseMgr::UpdateStreamTable(CSimpleArray <video_stream> *pArray,BYTE bO
 	{
 	case UPDATE_STREAM:
 		{
+			CString strSql;
+			CString str;
+			int nIdx = 0, nCount = pArray->GetSize();
+			for (nIdx = 0; nIdx < nCount; nIdx++)
+			{
+				str.Empty();
+				str.Format(_T("UPDATE ec_stream SET stream_type='%s' WHERE cameraid= %d and stream_name = '%s'"), 
+					(*pArray)[nIdx].stream_type.c_str(),(*pArray)[nIdx].cameraid, (*pArray)[nIdx].stream_name.c_str());
 
+				strSql += str;
+			}
+			m_ecStream.ModifyDatabase(strSql);
+			m_ecStream.CloseAll();	
 		}
 		break;
 	default:
 		return;
-	}
-
-	if (bExecute)
-	{
-
 	}
 }
 
@@ -1066,4 +1262,14 @@ CString CDatabaseMgr::DateTimeFormat(const DBTIMESTAMP& dbTime)
 		dbTime.second);
 
 	return str;
+}
+
+void CDatabaseMgr::FlushData()
+{
+	m_CameraArray.RemoveAll();
+	m_GroupCamArray.RemoveAll();
+	m_GroupArray.RemoveAll();
+
+	m_DeviceGroupArray.RemoveAll();
+	m_LayoutGroupArray.RemoveAll();
 }

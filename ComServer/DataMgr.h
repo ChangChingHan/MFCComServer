@@ -62,6 +62,8 @@ private:
 	void InsertDatabase(BYTE bOperation, VARIANT* VarData);
 	void DeleteDatabase(BYTE bOperation, VARIANT* VarData);
 	void UpdateDatabase(BYTE bOperation, VARIANT* VarData);
+
+	void FlushData();
 	
 public:
 

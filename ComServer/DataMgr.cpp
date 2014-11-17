@@ -17,6 +17,11 @@ STDMETHODIMP CDataMgr::QueryFromDC(BYTE bDataType, BYTE bOperation, VARIANT* Var
 			DatabaseOperation(bOperation, VarData);
 		}
 		break;
+	case FLUSH_DATA:
+		{
+			FlushData();
+		}
+		break;
 	default:
 		break;
 	}
@@ -55,7 +60,7 @@ void CDataMgr::QueryDatabase(BYTE bOperation, VARIANT* VarData)
 		CSimpleArray<group_camera> *pArray = (CSimpleArray<group_camera>*)VarData;
 		m_databaseMgr.QueryGroupCamTable(pArray,bOperation);
 	}
-	else if (bOperation >= GET_CAM && bOperation <= GET_CAM_BY_INDEX)
+	else if (bOperation >= GET_CAM && bOperation <= GET_LAST_CAM)
 	{
 		CSimpleArray<camera> *pArray = (CSimpleArray<camera>*)VarData;
 		m_databaseMgr.QueryCameraTable(pArray, bOperation);
@@ -80,10 +85,10 @@ void CDataMgr::QueryDatabase(BYTE bOperation, VARIANT* VarData)
 		CSimpleArray<parameter> *pArray = (CSimpleArray<parameter>*)VarData;
 		m_databaseMgr.QueryECparmsTable(pArray);
 	}
-	else if (bOperation >= GET_EVENT_LOG && bOperation <= GET_EVENT_LOG)
+	else if (bOperation >= GET_EVENT_LOG && bOperation <= GET_EVENT_LOG_BY_INDEX)
 	{
 		CSimpleArray<eventlog> *pArray = (CSimpleArray<eventlog>*)VarData;
-		m_databaseMgr.QueryEventLogTable(pArray);
+		m_databaseMgr.QueryEventLogTable(pArray, bOperation);
 	}
 	else if (bOperation >= GET_EVENT_ACTION && bOperation <= GET_EVENT_ACTION_BY_MAC)
 	{
@@ -117,6 +122,11 @@ void CDataMgr::InsertDatabase(BYTE bOperation, VARIANT* VarData)
 	{
 		CSimpleArray <video_stream> *pArray = (CSimpleArray <video_stream>*)VarData;
 		m_databaseMgr.InsertStreamTable(pArray);
+	}
+	else if (bOperation == INSERT_EVENT_LOG)
+	{
+		CSimpleArray <eventlog> *pArray = (CSimpleArray <eventlog>*)VarData;
+		m_databaseMgr.InsertEventLogTable(pArray);
 	}
 	else if (bOperation == INSERT_EVENT_ACTION)
 	{
@@ -185,4 +195,9 @@ void CDataMgr::UpdateDatabase(BYTE bOperation, VARIANT* VarData)
 		CSimpleArray<eventaction> *pArray = (CSimpleArray<eventaction>*)VarData;
 		m_databaseMgr.UpdateEventActionTable(pArray);
 	}
+}
+
+void CDataMgr::FlushData()
+{
+	m_databaseMgr.FlushData();
 }

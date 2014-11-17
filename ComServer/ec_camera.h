@@ -146,8 +146,8 @@ public:
 
 	void GetRowsetProperties(CDBPropSet* pPropSet)
 	{
-		pPropSet->AddProperty(DBPROP_CANFETCHBACKWARDS, true, DBPROPOPTIONS_OPTIONAL);
-		pPropSet->AddProperty(DBPROP_CANSCROLLBACKWARDS, true, DBPROPOPTIONS_OPTIONAL);
+		pPropSet->AddProperty(DBPROP_CANFETCHBACKWARDS, VARIANT_TRUE, DBPROPOPTIONS_OPTIONAL);
+		pPropSet->AddProperty(DBPROP_CANSCROLLBACKWARDS, VARIANT_TRUE, DBPROPOPTIONS_OPTIONAL);
 		pPropSet->AddProperty(DBPROP_IRowsetChange, true, DBPROPOPTIONS_OPTIONAL);
 		pPropSet->AddProperty(DBPROP_UPDATABILITY, DBPROPVAL_UP_CHANGE | DBPROPVAL_UP_INSERT | DBPROPVAL_UP_DELETE);
 	}
@@ -163,7 +163,9 @@ public:
 		// store the password in some other form or use a different user authentication.
 		//hr = _db.OpenFromInitializationString(L"Provider=MSDASQL.1;Persist Security Info=False;Extended Properties=\"DSN=EtroCenter;UID=;Trusted_Connection=Yes;APP=Microsoft\x00ae Visual Studio\x00ae 2008;WSID=LYNN-PC;DATABASE=Etrocenter;Network=DBNMPNTW\"");
 
-		hr = _db.OpenFromInitializationString(L"Provider=MSDASQL.1;Persist Security Info=False;Extended Properties=\"DSN=EtroCenter;UID=;Trusted_Connection=Yes;DATABASE=Etrocenter;Network=DBNMPNTW\"");
+		IniDatabaseAuth();
+		hr = _db.OpenFromInitializationString(m_strDatabaseAuth);
+
 		if (FAILED(hr))
 		{
 #ifdef _DEBUG

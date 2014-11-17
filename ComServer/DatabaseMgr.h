@@ -17,8 +17,9 @@ public:
 	CDatabaseMgr(void);
 	~CDatabaseMgr(void);
 
-private:
-	CString DateTimeFormat(const DBTIMESTAMP& dbTime);
+public:
+	CRITICAL_SECTION					m_criSec;
+
 public:
 	void QueryGroupTable(CSimpleArray <group> *pArray, BYTE bOperation, BOOL bUpdate = FALSE);
 	void QueryGroupCamTable(CSimpleArray <group_camera> *pArray, BYTE bOperation, BOOL bUpdate = FALSE);
@@ -27,7 +28,7 @@ public:
 	void QueryCameraRecordTable(CSimpleArray<video_record> *pArray);
 	void QueryStorageTable(CSimpleArray<storage> *pArray);
 	void QueryECparmsTable(CSimpleArray<parameter> *pArray);
-	void QueryEventLogTable(CSimpleArray<eventlog> *pArray);
+	void QueryEventLogTable(CSimpleArray<eventlog> *pArray, BYTE bOperation);
 	void QueryEventActionTable(CSimpleArray<eventaction> *pArray, BYTE bOperation);
 
 	void InsertGroupTable(CSimpleArray <group> *pArray);
@@ -35,6 +36,7 @@ public:
 	void InsertCameraRecordTable(CSimpleArray<video_record> *pArray);
 	void InsertGroupCamTable(CSimpleArray<group_camera> *pArray);
 	void InsertStreamTable(CSimpleArray<video_stream> *pArray);
+	void InsertEventLogTable(CSimpleArray<eventlog> *pArray);
 	void InsertEventActionTable(CSimpleArray<eventaction> *pArray);
 
 	void DeleteGroupTable(CSimpleArray <group> *pArray, BYTE bOperation);
@@ -50,15 +52,20 @@ public:
 	void UpdateStreamTable(CSimpleArray <video_stream> *pArray,BYTE bOperation);
 	void UpdateEventActionTable(CSimpleArray<eventaction> *pArray);
 
+	void FlushData();
+	DWORD TransIP2DWORD(wstring strIP);
+	CString DateTimeFormat(const DBTIMESTAMP& dbTime);
+	Cec_event_log* GetEventLogHandle(){return &m_ecEventLog;};
+
 private:
+	vector<eventlog>				m_eventLogArray;
 	CSimpleArray<camera> m_CameraArray;
 	CSimpleArray<group_camera> m_GroupCamArray;
-	
-	
 	CSimpleArray<group> m_GroupArray;
 	CSimpleArray<group> m_DeviceGroupArray;
 	CSimpleArray<group> m_LayoutGroupArray;
-
+	wstring TransDWORD2IP(DWORD dwIP);
+	
 private:
 	Cec_camera					m_ecCamera;
 	Cec_camera_group			m_ecGroup;
